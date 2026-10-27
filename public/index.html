@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#100d18"><title>GamePulse — Game Update Tracker</title>
+<style>
+:root{color-scheme:dark;--bg:#100d18;--panel:#1b1627;--line:#342943;--muted:#aaa0bb;--text:#f8f4ff;--purple:#b79aff;--green:#8be6c1;--yellow:#f4d58b}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#2a1d43 0,#100d18 55%);color:var(--text);font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{padding:28px max(18px,calc((100% - 1120px)/2));border-bottom:1px solid var(--line);background:#100d18d9}
+.brand{font-size:28px;font-weight:850;letter-spacing:.3px}.brand span{color:var(--purple)}.sub{color:var(--muted);margin-top:3px}
+main{max-width:1120px;margin:26px auto;padding:0 16px}.hero{display:flex;gap:18px;justify-content:space-between;align-items:center;flex-wrap:wrap;margin-bottom:22px}
+h1{font-size:clamp(24px,4vw,36px);line-height:1.2;margin:0 0 8px}.muted{color:var(--muted)}.pill{border:1px solid var(--line);border-radius:99px;padding:6px 11px;color:var(--purple);font-size:12px}
+.controls{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}.controls input,.controls select,input,textarea,button{font:inherit}
+input,select,textarea{background:#120f1b;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:11px 12px;min-width:0}
+#search{flex:1;min-width:220px}button{cursor:pointer;border:1px solid var(--line);border-radius:10px;padding:10px 14px;background:#2b2140;color:var(--text);font-weight:650}button.primary{background:var(--purple);color:#171020;border-color:var(--purple)}button.ghost{background:transparent}button:disabled{opacity:.55;cursor:wait}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(285px,1fr));gap:14px}.card{border:1px solid var(--line);background:linear-gradient(145deg,#211a30,#171321);border-radius:17px;padding:17px;min-width:0}
+.cardtop{display:flex;gap:12px;align-items:flex-start;justify-content:space-between}.game{font-size:19px;font-weight:800}.region{font-size:12px;color:var(--muted);margin-top:3px}.status{font-size:11px;padding:4px 8px;border-radius:99px;background:#2d2540;color:var(--purple);white-space:nowrap}.status.verified{color:var(--green);background:#18372e}.status.manual{color:var(--yellow);background:#3b3020}
+.countdown{font-size:25px;font-weight:850;letter-spacing:.3px;margin:18px 0 3px}.date{font-size:13px;color:var(--muted)}.patch{margin-top:14px;padding-top:13px;border-top:1px solid var(--line)}.patch strong{display:block;margin-bottom:3px}.source{font-size:12px;color:var(--muted);overflow-wrap:anywhere;margin-top:12px}.empty{padding:40px 15px;text-align:center;border:1px dashed var(--line);border-radius:15px;color:var(--muted)}
+details{margin-top:26px}.admin{margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}.admin label{display:grid;gap:5px;font-size:13px;color:var(--muted)}.admin textarea{min-height:75px}.admin .wide{grid-column:1/-1}.admin-note{font-size:12px;color:var(--muted);margin-top:10px}footer{max-width:1120px;margin:32px auto;padding:18px 16px;color:var(--muted);font-size:12px;border-top:1px solid var(--line)}
+@media(max-width:520px){header{padding:20px 16px}.brand{font-size:24px}.countdown{font-size:22px}}
+</style></head>
+<body>
+<header><div class="brand">GAME<span>PULSE</span></div><div class="sub">Game Update Tracker · SEA / Asia</div></header>
+<main>
+<section class="hero"><div><h1>ติดตามแพตช์เกมที่คุณรอ</h1><div class="muted">เวลาอัปเดต แพตช์โน้ต และแหล่งข้อมูลในที่เดียว</div></div><span class="pill" id="lastRefresh">กำลังโหลดข้อมูล…</span></section>
+<div class="controls"><input id="search" placeholder="ค้นหาชื่อเกม / เวอร์ชัน…" aria-label="ค้นหาเกม"><select id="region"><option value="">ทุกภูมิภาค</option><option>SEA</option><option>Asia</option><option>Global</option><option>Japan</option><option>Korea</option><option>China</option></select><button id="refresh">↻ รีเฟรช</button></div>
+<div id="message" class="muted" role="status"></div><section id="games" class="grid"></section>
+<details><summary>ผู้ดูแลระบบ · เพิ่ม / แก้ไขข้อมูลเกม</summary>
+<p class="muted">ต้องตั้งค่า Secret ชื่อ <code>ADMIN_TOKEN</code> ใน Cloudflare Pages ก่อนใช้งาน ส่วนการแก้ไขผ่านหน้านี้ใช้ Token ดังกล่าว</p>
+<div class="admin">
+<label>Admin Token<input id="token" type="password" autocomplete="current-password" placeholder="ใส่ ADMIN_TOKEN"></label>
+<label>รหัสเกม (เว้นว่างเพื่อเพิ่มเกมใหม่)<input id="id" placeholder="เช่น genshin-sea"></label>
+<label>ชื่อเกม *<input id="name" placeholder="ชื่อเกม"></label>
+<label>ภูมิภาค<select id="gameRegion"><option>SEA</option><option>Asia</option><option>Global</option><option>Japan</option><option>Korea</option><option>China</option></select></label>
+<label>วันเวลาอัปเดต (เวลาไทย)<input id="updateAt" type="datetime-local"></label>
+<label>เวอร์ชันแพตช์<input id="version" placeholder="เช่น 6.0"></label>
+<label class="wide">รายละเอียดแพตช์<textarea id="notes" placeholder="รายละเอียดประกาศ / สิ่งที่จะอัปเดต"></textarea></label>
+<label class="wide">URL แหล่งข้อมูล (RSS/Atom หรือหน้าเว็บประกาศ)<input id="sourceUrl" type="url" placeholder="https://..."></label>
+<label>ชนิดแหล่งข้อมูล<select id="sourceType"><option value="manual">manual (กำหนดเอง)</option><option value="rss">rss (RSS/Atom)</option></select></label>
+<label>ลิงก์แพตช์โน้ต<input id="patchUrl" type="url" placeholder="https://..."></label>
+<div class="wide"><button class="primary" id="save">บันทึกเกม</button> <button class="ghost" id="clear">ล้างฟอร์ม</button> <button class="ghost" id="check">ตรวจสอบแหล่งข้อมูล</button></div>
+</div><div id="adminMessage" class="admin-note"></div>
+</details>
+</main><footer>GamePulse · ข้อมูลอัตโนมัติจะแสดงสถานะตามแหล่งที่อ่านได้จริง หากต้นทางไม่เผยแพร่เวลาอัปเดต ระบบจะไม่เดาเวลาให้เอง</footer>
+<script>
+const $=id=>document.getElementById(id);let allGames=[];
+function esc(v=''){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function fmtDate(v){if(!v)return 'ยังไม่กำหนดเวลา';const d=new Date(v);return isNaN(d)?'ยังไม่กำหนดเวลา':new Intl.DateTimeFormat('th-TH',{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Bangkok'}).format(d)+' น.'}
+function countdown(v){if(!v)return 'ยังไม่กำหนดเวลา';const n=new Date(v).getTime()-Date.now();if(!Number.isFinite(n))return 'ยังไม่กำหนดเวลา';if(n<=0)return 'ถึงกำหนดแล้ว / อยู่ระหว่างตรวจสอบ';let s=Math.floor(n/1000),d=Math.floor(s/86400);s%=86400;let h=Math.floor(s/3600);s%=3600;let m=Math.floor(s/60);s%=60;return `${d} วัน ${h} ชม. ${m} นาที ${s} วิ`}
+function render(){const q=$('search').value.trim().toLowerCase(),r=$('region').value;const rows=allGames.filter(g=>(!r||g.region===r)&&(`${g.name} ${g.version||''} ${g.notes||''}`.toLowerCase().includes(q)));$('games').innerHTML=rows.length?rows.map(g=>`<article class="card"><div class="cardtop"><div><div class="game">${esc(g.name)}</div><div class="region">${esc(g.region||'SEA')} · ${g.version?'เวอร์ชัน '+esc(g.version):'ยังไม่ระบุเวอร์ชัน'}</div></div><span class="status ${g.source_status==='verified'?'verified':g.source_type==='manual'?'manual':''}">${g.source_status==='verified'?'ตรวจพบจากต้นทาง':g.source_type==='manual'?'กำหนดเอง':g.source_status==='error'?'ตรวจสอบไม่สำเร็จ':'รอตรวจสอบ'}</span></div><div class="countdown" data-date="${esc(g.update_at||'')}">${countdown(g.update_at)}</div><div class="date">กำหนดอัปเดต: ${fmtDate(g.update_at)}</div><div class="patch"><strong>รายละเอียดแพตช์</strong><div>${esc(g.notes||'ยังไม่มีรายละเอียด').replace(/\n/g,'<br>')}</div></div>${g.patch_url?`<p><a href="${esc(g.patch_url)}" target="_blank" rel="noopener noreferrer" style="color:var(--purple)">อ่าน Patch Notes ↗</a></p>`:''}<div class="source">แหล่งข้อมูล: ${g.source_url?`<a href="${esc(g.source_url)}" target="_blank" rel="noopener noreferrer" style="color:var(--muted)">เปิดต้นทาง ↗</a>`:'ไม่ได้ระบุ'} · ตรวจล่าสุด: ${g.checked_at?fmtDate(g.checked_at):'ยังไม่เคยตรวจ'}</div><p><button class="ghost" data-edit="${esc(g.id)}">แก้ไขรายการนี้</button></p></article>`).join(''):'<div class="empty">ไม่พบเกมที่ตรงกับคำค้นหา</div>'; }
+async function load(){ $('message').textContent='กำลังโหลดข้อมูล…';try{const res=await fetch('/api/games');const data=await res.json();if(!res.ok)throw Error(data.error||'โหลดข้อมูลไม่สำเร็จ');allGames=data.games||[];render();$('lastRefresh').textContent='อัปเดตหน้าเว็บ '+new Date().toLocaleTimeString('th-TH');$('message').textContent=`พบ ${allGames.length} เกม`; }catch(e){$('message').textContent='โหลดข้อมูลไม่สำเร็จ: '+e.message+' — ตรวจสอบว่าได้สร้าง D1 และผูก Binding ชื่อ DB แล้ว';}}
+function clearForm(){['id','name','version','notes','sourceUrl','patchUrl','updateAt'].forEach(k=>$(k).value='');$('gameRegion').value='SEA';$('sourceType').value='manual';$('adminMessage').textContent=''}
+function toLocal(v){if(!v)return '';const d=new Date(v);if(isNaN(d))return '';return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16)}
+$('games').addEventListener('click',e=>{const b=e.target.closest('[data-edit]');if(!b)return;const g=allGames.find(x=>x.id===b.dataset.edit);if(!g)return; $('id').value=g.id;$('name').value=g.name;$('gameRegion').value=g.region||'SEA';$('updateAt').value=toLocal(g.update_at);$('version').value=g.version||'';$('notes').value=g.notes||'';$('sourceUrl').value=g.source_url||'';$('patchUrl').value=g.patch_url||'';$('sourceType').value=g.source_type||'manual';document.querySelector('details').open=true;window.scrollTo({top:document.querySelector('details').offsetTop,behavior:'smooth'});});
+$('save').onclick=async()=>{const body={id:$('id').value.trim()||undefined,name:$('name').value.trim(),region:$('gameRegion').value,update_at:$('updateAt').value?new Date($('updateAt').value).toISOString():null,version:$('version').value.trim(),notes:$('notes').value,source_url:$('sourceUrl').value.trim(),source_type:$('sourceType').value,patch_url:$('patchUrl').value.trim()};if(!body.name){$('adminMessage').textContent='กรุณากรอกชื่อเกม';return}try{const res=await fetch('/api/admin/games',{method:'POST',headers:{'content-type':'application/json','x-admin-token':$('token').value},body:JSON.stringify(body)});const d=await res.json();if(!res.ok)throw Error(d.error||'บันทึกไม่สำเร็จ');$('adminMessage').textContent='บันทึกสำเร็จ';clearForm();await load()}catch(e){$('adminMessage').textContent='ผิดพลาด: '+e.message}};
+$('check').onclick=async()=>{const id=$('id').value.trim();if(!id){$('adminMessage').textContent='กรุณาบันทึกเกมก่อน แล้วค่อยตรวจสอบแหล่งข้อมูล';return}try{const res=await fetch('/api/check',{method:'POST',headers:{'content-type':'application/json','x-admin-token':$('token').value},body:JSON.stringify({id})});const d=await res.json();if(!res.ok)throw Error(d.error||'ตรวจสอบไม่สำเร็จ');$('adminMessage').textContent=d.message||'ตรวจสอบเสร็จแล้ว';await load()}catch(e){$('adminMessage').textContent='ผิดพลาด: '+e.message}};
+$('clear').onclick=clearForm;$('refresh').onclick=load;$('search').oninput=render;$('region').onchange=render;load();setInterval(()=>document.querySelectorAll('[data-date]').forEach(el=>el.textContent=countdown(el.dataset.date)),1000);
+</script></body></html>
